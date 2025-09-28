@@ -1,0 +1,7 @@
+{
+  "name": "remote-key-control",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
