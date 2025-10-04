@@ -6,16 +6,37 @@
 
 <ion-content class="ion-padding">
 
+  <!-- Pause Button -->
   <ion-button expand="block" color="warning" (click)="sendCommand('pause')">
     Pause
   </ion-button>
 
-  <ion-button expand="block" color="danger" (click)="sendCommand('shutdown')">
-    Shutdown
-  </ion-button>
+  <!-- Brightness Control Slider -->
+  <div class="brightness-control">
+    <ion-label class="label">Brightness: {{ brightness }}%</ion-label>
+    <ion-range
+      min="0"
+      max="100"
+      step="1"
+      [(ngModel)]="brightness"
+      color="secondary"
+      (ionChange)="onBrightnessChange($event)">
+      <ion-icon slot="start" name="sunny-outline"></ion-icon>
+      <ion-icon slot="end" name="sunny"></ion-icon>
+    </ion-range>
+  </div>
 
-  <ion-button expand="block" fill="outline" (click)="goBack()">
-    Back
-  </ion-button>
+  <!-- Floating Buttons -->
+  <ion-fab vertical="bottom" horizontal="start" slot="fixed">
+    <ion-fab-button color="primary" (click)="goBack()">
+      <ion-icon name="arrow-back-outline"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button color="danger" (click)="sendCommand('shutdown')">
+      <ion-icon name="power-outline"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
 
 </ion-content>

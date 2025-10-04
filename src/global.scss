@@ -76,4 +76,29 @@
   border-radius: 16px;
 }
 
+.brightness-control {
+  margin-top: 30px;
+  text-align: center;
+
+  .label {
+    display: block;
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+
+  ion-range {
+    --bar-background: #ccc;
+    --bar-background-active: var(--ion-color-secondary);
+    --knob-size: 28px;
+    --bar-height: 6px;
+  }
+}
+
+ion-fab-button {
+  --size: 50px;
+  --border-radius: 50%;
+}
+
+
 
