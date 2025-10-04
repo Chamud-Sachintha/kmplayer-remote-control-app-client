@@ -35,3 +35,45 @@
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import '@ionic/angular/css/palettes/dark.system.css';
+
+.button-container {
+  display: flex;
+  flex-direction: column; /* stack vertically */
+  gap: 20px; /* space between buttons */
+  height: 100%;
+  justify-content: center; /* center vertically */
+}
+
+.big-btn {
+  font-size: 2rem;     /* make text big */
+  height: 120px;       /* taller button */
+  border-radius: 16px; /* rounded corners */
+}
+
+.button-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.big-btn {
+  font-size: 2rem;
+  height: 120px;
+  border-radius: 16px;
+}
+
+.button-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.big-btn {
+  font-size: 2rem;
+  height: 120px;
+  border-radius: 16px;
+}
+
+
