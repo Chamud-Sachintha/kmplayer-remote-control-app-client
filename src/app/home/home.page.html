@@ -18,6 +18,10 @@
     <ion-button color="danger" (click)="disconnect()" [disabled]="!connected">
       Disconnect
     </ion-button>
+
+    <ion-button color="medium" [routerLink]="['/control']" [disabled]="!connected">
+      More Controls
+    </ion-button>
   </div>
 
   <div *ngIf="connected" style="margin-bottom:12px;">

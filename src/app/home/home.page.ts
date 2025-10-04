@@ -12,6 +12,7 @@ import {
 } from '@ionic/angular/standalone';
 import { NgIf, NgForOf } from '@angular/common';
 import { Http } from '@capacitor-community/http';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-home',
@@ -30,6 +31,7 @@ import { Http } from '@capacitor-community/http';
     IonSpinner,
     NgIf,
     NgForOf,
+    RouterLink
   ],
 })
 export class HomePage {
@@ -150,6 +152,8 @@ export class HomePage {
       await Http.get({ url: `http://${ip}:${this.port}/`, headers: {}, params: {} });
       this.connected = true;
       this.connectedIp = ip;
+
+      localStorage.setItem('connectedIp', ip);
       alert('Connected to ' + ip);
     } catch (err) {
       console.error('Failed to connect to', ip, err);

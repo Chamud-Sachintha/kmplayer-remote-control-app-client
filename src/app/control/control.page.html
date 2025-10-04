@@ -1,0 +1,21 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Advanced Controls</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <ion-button expand="block" color="warning" (click)="sendCommand('pause')">
+    Pause
+  </ion-button>
+
+  <ion-button expand="block" color="danger" (click)="sendCommand('shutdown')">
+    Shutdown
+  </ion-button>
+
+  <ion-button expand="block" fill="outline" (click)="goBack()">
+    Back
+  </ion-button>
+
+</ion-content>
