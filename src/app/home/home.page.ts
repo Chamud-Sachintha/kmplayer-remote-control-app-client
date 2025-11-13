@@ -13,6 +13,7 @@ import {
 import { NgIf, NgForOf } from '@angular/common';
 import { Http } from '@capacitor-community/http';
 import { RouterLink } from '@angular/router';
+import { Network } from '@capacitor/network';
 
 @Component({
   selector: 'app-home',
@@ -41,25 +42,35 @@ export class HomePage {
   scanning = false;
   foundIps: string[] = [];
 
-  // -------------- Configuration (tune these) --------------
-  // If you know typical subnet(s), add them here. E.g. '192.168.1' or '10.0.2'
-  subnetBases = ['192.168.1', '192.168.0'];
   port = 5000;
 
   // speed tuning
-  fastTimeoutMs = 600; // fast probe timeout (ms) — smaller => faster but may miss slow hosts
-  slowTimeoutMs = 1500; // optional slower retry (not used by default)
-  batchSize = 40; // how many parallel probes per batch
-  // --------------------------------------------------------
+  fastTimeoutMs = 300; // Android-friendly fast probe
+  concurrency = 60; // number of parallel probes
+
+  subnetBases: string[] = []; // will detect dynamically
 
   constructor() {}
 
-  // Fast probe with configurable timeout; returns true if reachable
+  async ngOnInit() {
+  // On Android, Network.getStatus() does not provide IP address
+  // So we use hardcoded common local subnets
+  this.subnetBases = ['192.168.1', '192.168.0'];
+
+  // Optionally, you can log network status for debug
+  try {
+    const status = await Network.getStatus();
+    console.log('Network connected:', status.connected);
+    console.log('Connection type:', status.connectionType);
+  } catch (err) {
+    console.warn('Unable to get network status:', err);
+  }
+}
+
   private async fastProbe(ip: string, timeoutMs = this.fastTimeoutMs): Promise<boolean> {
     const url = `http://${ip}:${this.port}/`;
     const reqPromise = Http.get({ url, headers: {}, params: {} });
 
-    // timeout wrapper
     const timeout = new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error('timeout')), timeoutMs)
     );
@@ -72,52 +83,31 @@ export class HomePage {
     }
   }
 
-  // Scan a subnet base (e.g., '192.168.1') in batches with prioritization and early exit
   private async scanSubnet(base: string): Promise<string[]> {
-    const ips: string[] = [];
-    // Build list 1..254
-    for (let i = 1; i <= 254; i++) {
-      ips.push(`${base}.${i}`);
-    }
-
-    // Prioritize likely addresses that often host servers
+    const ips = Array.from({ length: 254 }, (_, i) => `${base}.${i + 1}`);
     const prioritized = [`${base}.1`, `${base}.100`, `${base}.101`, `${base}.50`, `${base}.254`];
-    const remaining = ips.filter((ip) => !prioritized.includes(ip));
+    const remaining = ips.filter(ip => !prioritized.includes(ip));
     const order = [...prioritized, ...remaining];
 
     const found: string[] = [];
+    let index = 0;
 
-    // Scan in batches
-    for (let i = 0; i < order.length; i += this.batchSize) {
-      const batch = order.slice(i, i + this.batchSize);
-
-      // Run all probes in the batch in parallel
-      const results = await Promise.all(
-        batch.map(async (ip) => {
-          const ok = await this.fastProbe(ip);
-          return { ip, ok };
-        })
-      );
-
-      // Add found IPs to UI list
-      for (const r of results) {
-        if (r.ok) {
-          // avoid duplicates
-          if (!this.foundIps.includes(r.ip)) {
-            this.foundIps = [...this.foundIps, r.ip];
-          }
-          found.push(r.ip);
-        }
+    const worker = async () => {
+      while (index < order.length) {
+        const ip = order[index++];
+        const ok = await this.fastProbe(ip);
+        if (ok) found.push(ip);
       }
+    };
 
-      // Early exit: if we want to auto-connect to first found, break now
-      if (found.length > 0) break;
-    }
+    const workers = Array.from({ length: this.concurrency }, () => worker());
+    await Promise.all(workers);
 
+    // Update UI once
+    this.foundIps = [...this.foundIps, ...found];
     return found;
   }
 
-  // Public: scan configured subnets and auto-connect to the first host found
   async scanNetworkAndAutoConnect() {
     if (this.scanning) return;
     this.scanning = true;
@@ -129,7 +119,6 @@ export class HomePage {
       for (const base of this.subnetBases) {
         const found = await this.scanSubnet(base);
         if (found.length > 0) {
-          // auto-connect to first discovered host
           await this.autoConnect(found[0]);
           break;
         }
@@ -146,13 +135,11 @@ export class HomePage {
     }
   }
 
-  // Manual connect when tapping a found host in the list
   async autoConnect(ip: string) {
     try {
       await Http.get({ url: `http://${ip}:${this.port}/`, headers: {}, params: {} });
       this.connected = true;
       this.connectedIp = ip;
-
       localStorage.setItem('connectedIp', ip);
       alert('Connected to ' + ip);
     } catch (err) {
@@ -161,7 +148,6 @@ export class HomePage {
     }
   }
 
-  // Send key to connected PC
   async sendKey(key: string) {
     if (!this.connectedIp) {
       alert('Not connected to any PC.');
@@ -173,7 +159,7 @@ export class HomePage {
         url: `http://${this.connectedIp}:${this.port}/key`,
         headers: { 'Content-Type': 'application/json' },
         data: { key },
-        params: {}, // required by the plugin
+        params: {},
       });
       console.log('Sent:', key);
     } catch (err) {
